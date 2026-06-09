@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HurricaneTrack — Compare Sources</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ── NAVIGATION ── -->
+<nav id="nav">
+  <div class="nav-logo">🌀 HurricaneTrack <span class="logo-sub">Outlook Dashboard</span></div>
+  <div class="nav-links" id="navLinks">
+    <a class="nav-link" href="index.html">Dashboard</a>
+    <a class="nav-link" href="season.html">Season</a>
+    <a class="nav-link active" href="compare.html">Compare</a>
+    <a class="nav-link" href="admin.html">Admin</a>
+  </div>
+  <button class="nav-hamburger" onclick="toggleNav()" aria-label="Menu">☰</button>
+</nav>
+
+<!-- ── HERO ── -->
+<div class="page-hero">
+  <div class="page-hero-title">Forecast Source Comparison</div>
+  <div class="page-hero-meta">HT Skill Index rankings · Head-to-head accuracy across all verified years</div>
+</div>
+
+<!-- ── CONTENT ── -->
+<div class="page-content">
+
+  <!-- Filter row -->
+  <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+    <span class="label">Filter by metric:</span>
+    <button class="btn btn-ghost active" onclick="setFilter('all', this)">All</button>
+    <button class="btn btn-ghost" onclick="setFilter('named', this)">Named</button>
+    <button class="btn btn-ghost" onclick="setFilter('hurr', this)">Hurricanes</button>
+    <button class="btn btn-ghost" onclick="setFilter('major', this)">Major</button>
+    <button class="btn btn-ghost" onclick="setFilter('ace', this)">ACE</button>
+  </div>
+
+  <!-- Rank table -->
+  <div style="margin-bottom:24px">
+    <div class="section-title">Rankings</div>
+    <div class="chart-card" style="padding:0;overflow:hidden">
+      <div id="rankTable">
+        <!-- Populated by compare.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Skill bar chart -->
+  <div>
+    <div class="section-title">Skill Sub-Scores by Source</div>
+    <div class="chart-card">
+      <div class="chart-card-sub">Skill score 0–100 per category. Higher = better than climatology.</div>
+      <div class="chart-wrap" style="height:320px">
+        <canvas id="skillChart" role="img" aria-label="Skill scores by source"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/data.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/skills.js"></script>
+<script src="js/compare.js"></script>
+<script>
+  function toggleNav() {
+    document.getElementById('navLinks').classList.toggle('open');
+  }
+
+  function setFilter(metric, btn) {
+    document.querySelectorAll('.btn-ghost').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    // TODO: pass filter to compare.js
+    console.log('Filter:', metric);
+  }
+</script>
+</body>
+</html>

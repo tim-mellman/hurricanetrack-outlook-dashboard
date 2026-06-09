@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HurricaneTrack — Admin</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ── NAVIGATION ── -->
+<nav id="nav">
+  <div class="nav-logo">🌀 HurricaneTrack <span class="logo-sub">Outlook Dashboard</span></div>
+  <div class="nav-links" id="navLinks">
+    <a class="nav-link" href="index.html">Dashboard</a>
+    <a class="nav-link" href="season.html">Season</a>
+    <a class="nav-link" href="compare.html">Compare</a>
+    <a class="nav-link active" href="admin.html">Admin</a>
+  </div>
+  <button class="nav-hamburger" onclick="toggleNav()" aria-label="Menu">☰</button>
+</nav>
+
+<!-- ── HERO ── -->
+<div class="page-hero">
+  <div class="page-hero-title" style="color:var(--accent)">Admin Panel</div>
+  <div class="page-hero-meta">Update outlook numbers and season actuals. Data saved to localStorage.</div>
+</div>
+
+<!-- ── CONTENT ── -->
+<div class="page-content" style="max-width:960px">
+
+  <!-- Lock screen -->
+  <div id="adminLock" class="chart-card" style="text-align:center;padding:36px">
+    <div style="font-family:'Norwester',sans-serif;font-size:1.1rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px">
+      Enter Admin Password
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap">
+      <input type="password" id="adminPwInput" class="field-input"
+             placeholder="Password" style="width:220px;letter-spacing:0.15em"
+             onkeydown="if(event.key==='Enter') tryUnlock()">
+      <button class="btn btn-accent" onclick="tryUnlock()">Unlock</button>
+    </div>
+    <div id="adminErr" style="color:var(--major);font-size:0.8rem;margin-top:10px"></div>
+    <div style="margin-top:16px;font-size:0.72rem;color:var(--faint)">
+      Default password: <code style="font-family:monospace;color:var(--muted)">hurricanetrack2025</code>
+    </div>
+  </div>
+
+  <!-- Admin form (shown after unlock) -->
+  <div id="adminForm" style="display:none">
+
+    <!-- Section 1: Current season actuals -->
+    <div class="chart-card" style="margin-bottom:14px">
+      <div class="chart-card-title">Current Season Actuals</div>
+      <div class="chart-card-sub">Season-to-date counts — update as the season progresses</div>
+      <div id="actualsFields" style="margin-top:12px">
+        <!-- Populated by admin.js -->
+      </div>
+    </div>
+
+    <!-- Section 2: Outlook predictions -->
+    <div class="chart-card" style="margin-bottom:14px">
+      <div class="chart-card-title">Current Year Outlook Predictions</div>
+      <div class="chart-card-sub">Enter each source's predictions when released</div>
+      <div id="predTabs" style="display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 8px"></div>
+      <div id="predFields"></div>
+    </div>
+
+    <!-- Section 3: Historical actuals -->
+    <div class="chart-card" style="margin-bottom:14px">
+      <div class="chart-card-title">Historical Actuals</div>
+      <div class="chart-card-sub">Verified post-season totals — edit only when correcting errors</div>
+      <div id="historicalFields" style="margin-top:12px;overflow-x:auto">
+        <!-- Populated by admin.js -->
+      </div>
+    </div>
+
+    <!-- Section 4: Storm records -->
+    <div class="chart-card" style="margin-bottom:14px">
+      <div class="chart-card-title">Storm Records</div>
+      <div class="chart-card-sub">Add or edit individual storm entries for the season timeline</div>
+      <div id="stormsFields" style="margin-top:12px">
+        <!-- Populated by admin.js -->
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px">
+      <button class="btn btn-accent" onclick="saveAdmin()">Save &amp; Apply</button>
+      <button class="btn btn-ghost" onclick="resetAdmin()">Reset to JSON defaults</button>
+      <button class="btn btn-danger" onclick="lockAdmin()">Lock</button>
+      <div id="adminStatus" style="font-size:0.8rem;color:#4ade80;opacity:0;transition:opacity 0.3s;letter-spacing:0.05em"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/data.js"></script>
+<script src="js/admin.js"></script>
+<script>
+  function toggleNav() {
+    document.getElementById('navLinks').classList.toggle('open');
+  }
+</script>
+</body>
+</html>

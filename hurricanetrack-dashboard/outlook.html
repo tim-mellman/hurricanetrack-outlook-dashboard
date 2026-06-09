@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HurricaneTrack — Outlook Detail</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ── NAVIGATION ── -->
+<nav id="nav">
+  <div class="nav-logo">🌀 HurricaneTrack <span class="logo-sub">Outlook Dashboard</span></div>
+  <div class="nav-links" id="navLinks">
+    <a class="nav-link" href="index.html">Dashboard</a>
+    <a class="nav-link" href="season.html">Season</a>
+    <a class="nav-link" href="compare.html">Compare</a>
+    <a class="nav-link" href="admin.html">Admin</a>
+  </div>
+  <button class="nav-hamburger" onclick="toggleNav()" aria-label="Menu">☰</button>
+</nav>
+
+<!-- ── HERO ── -->
+<div class="page-hero">
+  <a href="index.html" style="font-size:0.75rem;color:var(--muted);display:inline-block;margin-bottom:8px">
+    ← Back to Dashboard
+  </a>
+  <div id="outlookHeader">
+    <!-- Populated by outlook.js -->
+    <div class="page-hero-title">Loading…</div>
+  </div>
+</div>
+
+<!-- ── CONTENT ── -->
+<div id="outlookContent" class="page-content">
+
+  <!-- HT Skill Index -->
+  <div style="margin-bottom:24px">
+    <div class="section-title">HT Skill Index</div>
+    <div class="chart-card">
+      <div id="skillDisplay" style="padding:8px 0">
+        <!-- Populated by outlook.js -->
+      </div>
+      <div style="margin-top:14px;font-size:0.78rem;color:var(--muted);line-height:1.6">
+        The HT Skill Index measures how much better (or worse) this source performed
+        compared to simply predicting the historical average every year.
+        A score of 100 = perfect accuracy. A score of 0 = no better than climatology.
+        Grades: A ≥85 · B ≥70 · C ≥55 · D &lt;55
+      </div>
+    </div>
+  </div>
+
+  <!-- Storm count history chart -->
+  <div style="margin-bottom:16px">
+    <div class="chart-card">
+      <div class="chart-card-title">Historical Storm Count Outlooks vs. Actuals</div>
+      <div class="chart-card-sub">Predicted (filled bar) vs. actual (dot) by year</div>
+      <div class="legend-row">
+        <div class="leg"><div class="leg-dot" style="background:var(--named)"></div> Named — predicted</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--hurr)"></div> Hurr — predicted</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--major)"></div> Major — predicted</div>
+        <div class="leg"><div class="leg-dot" style="background:white;border:2px solid var(--named)"></div> Actual</div>
+      </div>
+      <div class="chart-wrap" style="height:300px">
+        <canvas id="chartStorms" role="img" aria-label="Historical storm count outlook vs actuals"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACE history chart -->
+  <div>
+    <div class="chart-card">
+      <div class="chart-card-title">Historical ACE Outlooks vs. Actuals</div>
+      <div class="chart-card-sub">Predicted ACE (bar) vs. actual ACE (dot) by year</div>
+      <div class="legend-row">
+        <div class="leg"><div class="leg-dot" style="background:var(--ace)"></div> ACE — predicted</div>
+        <div class="leg"><div class="leg-dot" style="background:white;border:2px solid var(--ace)"></div> Actual ACE</div>
+        <div class="leg"><div class="leg-dash" style="border-color:var(--ace)"></div> Avg ACE (123)</div>
+      </div>
+      <div class="chart-wrap" style="height:280px">
+        <canvas id="chartAce" role="img" aria-label="Historical ACE outlook vs actuals"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/data.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/skills.js"></script>
+<script src="js/outlook.js"></script>
+<script>
+  function toggleNav() {
+    document.getElementById('navLinks').classList.toggle('open');
+  }
+</script>
+</body>
+</html>

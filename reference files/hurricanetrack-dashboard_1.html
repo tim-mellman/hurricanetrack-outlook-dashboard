@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HurricaneTrack — Atlantic Seasonal Outlook Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #0d0f11;
+  --surface: #141618;
+  --surface2: #1b1e21;
+  --surface3: #222529;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --named: #4a9eed;
+  --named-dim: rgba(74,158,237,0.22);
+  --hurr: #e8a430;
+  --hurr-dim: rgba(232,164,48,0.22);
+  --major: #d44b3a;
+  --major-dim: rgba(212,75,58,0.22);
+  --ace-color: #a78bfa;
+  --ace-dim: rgba(167,139,250,0.18);
+  --text: #edeae3;
+  --muted: rgba(237,234,227,0.45);
+  --faint: rgba(237,234,227,0.18);
+  --accent: #e8a430;
+  --accent-dim: rgba(232,164,48,0.12);
+  --green: #4ade80;
+  --green-dim: rgba(74,222,128,0.15);
+  --avg-color: rgba(255,255,255,0.18);
+  --grid-line: rgba(255,255,255,0.05);
+  --band-above: rgba(212,75,58,0.06);
+  --band-below: rgba(74,158,237,0.06);
+  --band-near: rgba(255,255,255,0.03);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+/* NAV */
+#nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(13,15,17,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; height: 54px; gap: 0; }
+.nav-logo { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 20px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 8px; margin-right: 28px; white-space: nowrap; }
+.nav-logo .sub { color: var(--muted); font-weight: 400; font-size: 13px; letter-spacing: 0.02em; text-transform: none; margin-left: 2px; }
+.nav-links { display: flex; gap: 2px; flex: 1; }
+.nav-link { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 6px 14px; border-radius: 4px; cursor: pointer; transition: all 0.15s; border: none; background: none; }
+.nav-link:hover { color: var(--text); background: var(--surface2); }
+.nav-link.active { color: var(--accent); background: var(--accent-dim); }
+.nav-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.season-pill { background: var(--major-dim); border: 1px solid rgba(212,75,58,0.35); color: #ff6b6b; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+.admin-btn { background: none; border: 1px solid var(--border2); color: var(--muted); font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 12px; border-radius: 4px; cursor: pointer; transition: all 0.15s; }
+.admin-btn:hover { color: var(--text); border-color: var(--border2); background: var(--surface2); }
+
+/* PAGES */
+.page { display: none; padding-top: 54px; }
+.page.active { display: block; }
+
+/* HERO / PROGRESS STRIP */
+.hero { background: var(--surface); border-bottom: 1px solid var(--border); padding: 20px 24px 18px; }
+.hero-top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+.hero-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 26px; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1.1; }
+.hero-title span { color: var(--accent); }
+.hero-meta { font-size: 12px; color: var(--muted); margin-top: 4px; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.06em; }
+.progress-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media(max-width:700px){.progress-grid{grid-template-columns:1fr 1fr;}}
+.prog-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; }
+.prog-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.prog-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.prog-vals { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: var(--muted); }
+.prog-vals strong { color: var(--text); }
+.prog-bar-bg { background: rgba(255,255,255,0.06); border-radius: 3px; height: 6px; overflow: hidden; }
+.prog-bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+.prog-nums { display: flex; align-items: baseline; gap: 6px; margin-top: 6px; }
+.prog-actual { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700; line-height: 1; }
+.prog-pred { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; color: var(--muted); }
+
+/* SOURCE TIMELINE STRIP */
+.source-strip { background: var(--bg); border-bottom: 1px solid var(--border); padding: 14px 24px; overflow-x: auto; }
+.source-strip-inner { display: flex; gap: 10px; min-width: max-content; }
+.src-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; cursor: pointer; transition: all 0.15s; min-width: 130px; position: relative; }
+.src-card:hover { border-color: var(--border2); }
+.src-card.selected { border-color: var(--accent); background: var(--accent-dim); }
+.src-card.compare-on { border-color: rgba(74,158,237,0.5); background: rgba(74,158,237,0.07); }
+.src-card-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); margin-bottom: 2px; }
+.src-card-when { font-size: 10px; color: var(--muted); letter-spacing: 0.04em; margin-bottom: 8px; font-family: 'Barlow Condensed', sans-serif; }
+.src-card-nums { display: flex; gap: 6px; }
+.src-num { font-family: 'Share Tech Mono', monospace; font-size: 12px; padding: 2px 5px; border-radius: 3px; }
+.src-num.named { background: rgba(74,158,237,0.15); color: var(--named); }
+.src-num.hurr { background: rgba(232,164,48,0.15); color: var(--hurr); }
+.src-num.major { background: rgba(212,75,58,0.15); color: var(--major); }
+.src-card-check { position: absolute; top: 8px; right: 8px; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); display: none; align-items: center; justify-content: center; font-size: 9px; color: #111; }
+.src-card.selected .src-card-check { display: flex; }
+
+/* COMPARE MODE TOGGLE */
+.mode-bar { display: flex; align-items: center; gap: 10px; padding: 10px 24px; background: var(--bg); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.mode-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.toggle-wrap { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; overflow: hidden; }
+.toggle-opt { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 14px; cursor: pointer; color: var(--muted); transition: all 0.15s; border: none; background: none; }
+.toggle-opt.active { background: var(--surface3); color: var(--text); }
+.chart-tabs { display: flex; gap: 6px; margin-left: auto; }
+.ctab { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 12px; border-radius: 4px; cursor: pointer; border: 1px solid var(--border); color: var(--muted); background: none; transition: all 0.15s; }
+.ctab.active { background: var(--accent); border-color: var(--accent); color: #111; }
+
+/* CHART SECTION */
+.charts-section { padding: 20px 24px; }
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media(max-width:780px){.chart-grid{grid-template-columns:1fr;}}
+.chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+.chart-card-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); margin-bottom: 2px; }
+.chart-card-sub { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+.legend-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.leg { display: flex; align-items: center; gap: 5px; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.leg-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.leg-line { width: 18px; height: 2px; flex-shrink: 0; }
+.leg-dash { width: 18px; height: 0; border-top: 2px dashed; flex-shrink: 0; opacity: 0.5; }
+.chart-wrap { position: relative; }
+
+/* SKILL SCORES PAGE */
+.skill-page { padding: 24px; padding-top: 78px; }
+.skill-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 22px; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+.skill-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+.skill-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 24px; }
+@media(max-width:680px){.skill-grid{grid-template-columns:1fr;}}
+.skill-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+.skill-card-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; }
+.skill-card-period { font-size: 11px; color: var(--muted); margin-bottom: 14px; }
+.skill-metric { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.skill-metric:last-child { border: none; padding-bottom: 0; }
+.skill-metric-label { font-size: 12px; color: var(--muted); }
+.skill-metric-val { font-family: 'Share Tech Mono', monospace; font-size: 13px; color: var(--text); }
+.skill-metric-val.good { color: var(--green); }
+.skill-metric-val.bad { color: var(--major); }
+.rank-badge { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 0.08em; padding: 3px 8px; border-radius: 3px; }
+.rank-1 { background: rgba(232,164,48,0.2); color: var(--accent); }
+.rank-2 { background: rgba(74,158,237,0.15); color: var(--named); }
+.rank-3 { background: rgba(237,234,227,0.1); color: var(--muted); }
+.skill-table { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.skill-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.skill-table th { background: var(--surface2); font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+.skill-table td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--text); font-family: 'Share Tech Mono', monospace; font-size: 12px; }
+.skill-table tr:last-child td { border: none; }
+.skill-table tr:hover td { background: var(--surface2); }
+
+/* ADMIN PAGE */
+.admin-page { padding: 24px; padding-top: 78px; max-width: 900px; margin: 0 auto; }
+.admin-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 22px; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; color: var(--accent); }
+.admin-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+.admin-lock { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 30px; text-align: center; margin-bottom: 20px; }
+.admin-lock-title { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
+.admin-lock input { background: var(--surface2); border: 1px solid var(--border2); color: var(--text); font-family: 'Barlow', sans-serif; font-size: 14px; padding: 10px 14px; border-radius: 5px; width: 260px; outline: none; margin-right: 8px; letter-spacing: 0.15em; }
+.admin-lock input:focus { border-color: var(--accent); }
+.btn { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 18px; border-radius: 5px; cursor: pointer; border: none; transition: all 0.15s; }
+.btn-accent { background: var(--accent); color: #111; }
+.btn-accent:hover { background: #f5b93d; }
+.btn-ghost { background: none; border: 1px solid var(--border2); color: var(--muted); }
+.btn-ghost:hover { color: var(--text); background: var(--surface2); }
+.btn-danger { background: rgba(212,75,58,0.2); border: 1px solid rgba(212,75,58,0.4); color: #ff6b6b; }
+.btn-danger:hover { background: rgba(212,75,58,0.3); }
+.admin-form { display: none; }
+.admin-form.unlocked { display: block; }
+.admin-section { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 18px; margin-bottom: 16px; }
+.admin-section-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+.admin-section-title span { font-size: 11px; color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
+.field-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+@media(max-width:600px){.field-grid{grid-template-columns:1fr 1fr;}}
+.field-group { display: flex; flex-direction: column; gap: 5px; }
+.field-label { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.field-input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: 'Share Tech Mono', monospace; font-size: 13px; padding: 7px 10px; border-radius: 4px; outline: none; width: 100%; }
+.field-input:focus { border-color: var(--accent); }
+.src-admin-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.src-atab { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; border-radius: 4px; cursor: pointer; border: 1px solid var(--border); color: var(--muted); background: none; transition: all 0.15s; }
+.src-atab.active { background: var(--surface3); color: var(--text); border-color: var(--border2); }
+.admin-actions { display: flex; gap: 10px; align-items: center; margin-top: 16px; }
+.admin-status { font-size: 12px; color: var(--green); font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.06em; opacity: 0; transition: opacity 0.3s; }
+.admin-status.show { opacity: 1; }
+.admin-2025 { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; margin-bottom: 12px; }
+.admin-2025-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+.yr-field-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 8px; margin-bottom: 8px; }
+@media(max-width:600px){.yr-field-grid{grid-template-columns:repeat(3,1fr);}}
+.yr-label { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); text-align: center; margin-bottom: 4px; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface3); border: 1px solid var(--border2); color: var(--text); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.06em; padding: 12px 18px; border-radius: 6px; z-index: 999; transform: translateY(60px); opacity: 0; transition: all 0.25s; }
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ABOUT PAGE */
+.about-page { padding: 24px; padding-top: 78px; max-width: 700px; }
+.about-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 22px; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 16px; }
+.about-block { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 18px; margin-bottom: 14px; }
+.about-block-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+.about-block p { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 8px; }
+.about-block p:last-child { margin-bottom: 0; }
+
+/* MISC */
+.sep { height: 1px; background: var(--border); margin: 0 24px; }
+.error-msg { font-size: 12px; color: var(--major); margin-top: 4px; font-family: 'Barlow Condensed', sans-serif; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-logo">🌀 <span style="color:var(--text)">Hurricane</span><span>Track</span><span class="sub">Outlook Dashboard</span></div>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="nav-link" onclick="showPage('skill')">Skill Scores</button>
+    <button class="nav-link" onclick="showPage('about')">About</button>
+  </div>
+  <div class="nav-right">
+    <div class="season-pill">● 2025 Season Active</div>
+    <button class="admin-btn" onclick="showPage('admin')">⚙ Admin</button>
+  </div>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ==================== DASHBOARD PAGE ==================== -->
+<div class="page active" id="page-dashboard">
+
+  <!-- HERO: 2025 Progress Strip -->
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <div class="hero-title"><span>2025</span> Atlantic Hurricane Season</div>
+        <div class="hero-meta" id="heroMeta">Loading outlooks…</div>
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--muted);text-align:right;letter-spacing:0.06em;">
+        Progress toward forecast<br><span style="color:var(--faint);font-size:10px;">Bars fill as actuals accumulate</span>
+      </div>
+    </div>
+    <div class="progress-grid" id="progressGrid"></div>
+  </div>
+
+  <!-- SOURCE CARDS STRIP -->
+  <div class="source-strip">
+    <div class="source-strip-inner" id="sourceStrip"></div>
+  </div>
+
+  <!-- MODE BAR -->
+  <div class="mode-bar">
+    <div class="mode-label">View mode</div>
+    <div class="toggle-wrap">
+      <button class="toggle-opt active" id="modeBtn-single" onclick="setMode('single')">Single source</button>
+      <button class="toggle-opt" id="modeBtn-compare" onclick="setMode('compare')">Compare sources</button>
+    </div>
+    <div id="compareHint" style="font-size:11px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;display:none;">Select up to 3 sources to compare</div>
+    <div class="chart-tabs" style="margin-left:auto;">
+      <button class="ctab active" id="ctab-storms" onclick="setChartView('storms')">Storms</button>
+      <button class="ctab" id="ctab-ace" onclick="setChartView('ace')">ACE</button>
+      <button class="ctab" id="ctab-error" onclick="setChartView('error')">Error</button>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-section">
+    <!-- STORMS VIEW -->
+    <div id="view-storms">
+      <div class="chart-grid">
+        <div class="chart-card">
+          <div class="chart-card-title" id="stormChartTitle">Outlooks vs. Actuals</div>
+          <div class="chart-card-sub">Named storms · Hurricanes · Major hurricanes — 2011–2025</div>
+          <div class="legend-row" id="stormLegend"></div>
+          <div class="chart-wrap" style="height:280px"><canvas id="chartStorms" role="img" aria-label="Storm outlook vs actuals chart">Named storms, hurricanes, and major hurricane predictions versus actuals by year.</canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Historical Averages Reference</div>
+          <div class="chart-card-sub">1991–2020 climatological averages with ±1 std. dev. bands</div>
+          <div class="legend-row">
+            <div class="leg"><div class="leg-dash" style="border-color:var(--named)"></div> Named avg (14)</div>
+            <div class="leg"><div class="leg-dash" style="border-color:var(--hurr)"></div> Hurr avg (7)</div>
+            <div class="leg"><div class="leg-dash" style="border-color:var(--major)"></div> Major avg (3)</div>
+          </div>
+          <div class="chart-wrap" style="height:280px"><canvas id="chartAvg" role="img" aria-label="Actual storm counts vs averages">Actual storm counts compared to climatological averages.</canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACE VIEW -->
+    <div id="view-ace" style="display:none">
+      <div class="chart-grid">
+        <div class="chart-card">
+          <div class="chart-card-title" id="aceChartTitle">ACE Outlooks vs. Actuals</div>
+          <div class="chart-card-sub">Accumulated Cyclone Energy — predicted vs. verified</div>
+          <div class="legend-row" id="aceLegend"></div>
+          <div class="chart-wrap" style="height:280px"><canvas id="chartAce" role="img" aria-label="ACE outlook vs actuals">ACE predictions versus actuals by year.</canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">ACE Activity Bands</div>
+          <div class="chart-card-sub">Shading = below / near / above normal activity thresholds (ACE 75 / 75–150 / 150+)</div>
+          <div class="legend-row">
+            <div class="leg"><div class="leg-dot" style="background:var(--major);opacity:0.6"></div> Above normal (&gt;150)</div>
+            <div class="leg"><div class="leg-dot" style="background:rgba(255,255,255,0.3)"></div> Near normal (75–150)</div>
+            <div class="leg"><div class="leg-dot" style="background:var(--named);opacity:0.5"></div> Below normal (&lt;75)</div>
+          </div>
+          <div class="chart-wrap" style="height:280px"><canvas id="chartAceBands" role="img" aria-label="ACE with activity bands">ACE by year with activity band shading.</canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ERROR VIEW -->
+    <div id="view-error" style="display:none">
+      <div class="chart-grid">
+        <div class="chart-card">
+          <div class="chart-card-title" id="errChartTitle">Forecast Error — Named Storms</div>
+          <div class="chart-card-sub">Predicted minus actual. Positive = over-forecast, negative = under-forecast.</div>
+          <div class="legend-row" id="errLegend"></div>
+          <div class="chart-wrap" style="height:280px"><canvas id="chartErrN" role="img" aria-label="Named storm forecast error">Named storm error by year.</canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Forecast Error — Hurricanes &amp; Major</div>
+          <div class="chart-card-sub">Predicted minus actual by year and category.</div>
+          <div class="chart-wrap" style="height:280px"><canvas id="chartErrHM" role="img" aria-label="Hurricane and major forecast error">Hurricane and major hurricane error by year.</canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SKILL PAGE ==================== -->
+<div class="page" id="page-skill">
+  <div class="skill-page">
+    <div class="skill-title">Forecast Skill Scores</div>
+    <div class="skill-sub">Mean Absolute Error (MAE), bias, and correlation across all available years for each forecast source. Lower MAE = better. Positive bias = systematic over-forecasting.</div>
+    <div class="skill-grid" id="skillGrid"></div>
+    <div class="skill-table" id="skillTable"></div>
+  </div>
+</div>
+
+<!-- ==================== ADMIN PAGE ==================== -->
+<div class="page" id="page-admin">
+  <div class="admin-page">
+    <div class="admin-title">⚙ Admin Panel</div>
+    <div class="admin-sub">Update outlook numbers when agencies release new forecasts. Data is saved to your browser's local storage.</div>
+
+    <div class="admin-lock" id="adminLock">
+      <div class="admin-lock-title">Enter admin password</div>
+      <input type="password" id="adminPwInput" placeholder="Password" onkeydown="if(event.key==='Enter')tryUnlock()">
+      <button class="btn btn-accent" onclick="tryUnlock()">Unlock</button>
+      <div class="error-msg" id="adminErr"></div>
+      <div style="font-size:11px;color:var(--faint);margin-top:12px;">Default password: <code style="font-family:'Share Tech Mono',monospace;color:var(--muted)">hurricanetrack2025</code></div>
+    </div>
+
+    <div class="admin-form" id="adminForm">
+      <!-- 2025 Actuals -->
+      <div class="admin-section">
+        <div class="admin-section-title">2025 Season Actuals <span>Update as the season progresses</span></div>
+        <div class="admin-2025">
+          <div class="admin-2025-label">Current counts (season-to-date)</div>
+          <div class="field-grid">
+            <div class="field-group"><div class="field-label" style="color:var(--named)">Named Storms</div><input class="field-input" id="act2025_named" type="number" min="0" placeholder="0"></div>
+            <div class="field-group"><div class="field-label" style="color:var(--hurr)">Hurricanes</div><input class="field-input" id="act2025_hurr" type="number" min="0" placeholder="0"></div>
+            <div class="field-group"><div class="field-label" style="color:var(--major)">Major Hurricanes</div><input class="field-input" id="act2025_major" type="number" min="0" placeholder="0"></div>
+            <div class="field-group"><div class="field-label" style="color:var(--ace-color)">ACE (season)</div><input class="field-input" id="act2025_ace" type="number" min="0" placeholder="0"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Outlook Numbers -->
+      <div class="admin-section">
+        <div class="admin-section-title">2025 Outlook Numbers <span>By source</span></div>
+        <div class="src-admin-tabs" id="adminSrcTabs"></div>
+        <div id="adminSrcFields"></div>
+      </div>
+
+      <!-- Historical Actuals -->
+      <div class="admin-section">
+        <div class="admin-section-title">Historical Actuals <span>Verified post-season counts 2011–2024</span></div>
+        <div id="histActualsFields"></div>
+      </div>
+
+      <div class="admin-actions">
+        <button class="btn btn-accent" onclick="saveAdmin()">Save &amp; Apply</button>
+        <button class="btn btn-ghost" onclick="resetAdmin()">Reset to defaults</button>
+        <button class="btn btn-danger" onclick="lockAdmin()">Lock</button>
+        <div class="admin-status" id="adminStatus">✓ Saved successfully</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ABOUT PAGE ==================== -->
+<div class="page" id="page-about">
+  <div class="about-page">
+    <div class="about-title">About This Dashboard</div>
+    <div class="about-block">
+      <div class="about-block-title">What this shows</div>
+      <p>This dashboard tracks Atlantic hurricane season outlooks from NOAA, the UK Met Office, Colorado State University (CSU), and ECMWF, comparing their predictions against verified post-season actuals going back to 2011.</p>
+      <p>Three categories are tracked: named storms (tropical storms + hurricanes), hurricanes, and major hurricanes (Category 3+). ACE (Accumulated Cyclone Energy) is also tracked as a single metric summarizing overall season activity.</p>
+    </div>
+    <div class="about-block">
+      <div class="about-block-title">Skill Scores</div>
+      <p>Mean Absolute Error (MAE) measures average forecast miss in each category. Bias shows systematic over- or under-forecasting. The skill table ranks sources across all verified years.</p>
+    </div>
+    <div class="about-block">
+      <div class="about-block-title">Activity Bands</div>
+      <p>ACE activity bands follow NOAA thresholds: below-normal (&lt;75), near-normal (75–150), and above-normal (&gt;150). These categories contextualise whether seasonal outlooks anticipated active or quiet years.</p>
+    </div>
+    <div class="about-block">
+      <div class="about-block-title">Data &amp; Credits</div>
+      <p>Concept and graphics by HurricaneTrack. Historical actuals from NOAA's NHC. Climatological averages (1991–2020) from NOAA. This dashboard is updated manually; use the Admin panel to enter new outlooks as they are released each spring.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== DEFAULT DATA =====================
+const DEFAULT_DATA = {
+  sources: {
+    noaa: {
+      label: 'NOAA', sublabel: 'May Outlook', color: '#4a9eed',
+      named_pred:  [14,13,13,10,11,15,14,14,14,19,17,19,17,17,19],
+      hurr_pred:   [7, 7, 7, 5, 6, 8, 7, 7, 7, 9, 8, 9, 8, 8, 9],
+      major_pred:  [3, 3, 3, 2, 2, 4, 3, 3, 3, 4, 4, 4, 4, 4, 4],
+      ace_pred:    [130,115,115,95,100,145,130,130,130,165,155,165,155,155,170],
+    },
+    ukmet: {
+      label: 'UK Met', sublabel: 'May Outlook', color: '#a78bfa',
+      named_pred:  [16,14,13,10,12,16,15,15,15,20,18,20,18,18,20],
+      hurr_pred:   [8, 7, 6, 5, 6, 8, 8, 7, 8,10, 9, 9, 9, 9,10],
+      major_pred:  [4, 3, 3, 2, 3, 4, 3, 3, 3, 5, 4, 5, 4, 4, 5],
+      ace_pred:    [140,120,110,90,105,150,140,135,140,175,160,170,160,160,180],
+    },
+    csu_apr: {
+      label: 'CSU', sublabel: 'April Outlook', color: '#4ade80',
+      named_pred:  [14,14,12,10,10,15,15,13,15,18,17,19,17,18,19],
+      hurr_pred:   [7, 7, 5, 4, 5, 7, 7, 6, 7, 9, 8, 8, 8, 9, 9],
+      major_pred:  [3, 3, 2, 1, 2, 3, 3, 2, 3, 4, 3, 4, 4, 4, 5],
+      ace_pred:    [128,118,102,88,98,142,138,125,132,165,150,160,152,158,172],
+    },
+    csu_jun: {
+      label: 'CSU', sublabel: 'June Outlook', color: '#34d399',
+      named_pred:  [15,15,13,11,11,16,16,14,16,20,18,20,18,19,20],
+      hurr_pred:   [8, 8, 6, 5, 5, 8, 8, 7, 8,10, 8, 9, 8, 9,10],
+      major_pred:  [3, 3, 2, 2, 2, 4, 3, 3, 3, 4, 4, 4, 4, 4, 5],
+      ace_pred:    [135,125,108,92,100,148,140,130,138,170,155,165,155,158,175],
+    },
+    ecmwf: {
+      label: 'ECMWF', sublabel: 'May Outlook', color: '#f87171',
+      named_pred:  [null,null,null,null,null,null,null,null,15,18,17,18,17,18,19],
+      hurr_pred:   [null,null,null,null,null,null,null,null,7, 9, 8, 9, 8, 9, 9],
+      major_pred:  [null,null,null,null,null,null,null,null,3, 4, 4, 4, 4, 4, 5],
+      ace_pred:    [null,null,null,null,null,null,null,null,125,162,148,158,148,155,168],
+    },
+  },
+  actuals: {
+    named: [19,19,14,8, 11,15,17,15,18,30,21,14,20,18,null],
+    hurr:  [7, 10,2, 6, 4, 7, 10,8, 6,13, 7, 7, 7,11,null],
+    major: [4, 1, 0, 2, 2, 6, 4, 2, 3, 7, 4, 2, 3, 5,null],
+    ace:   [126,133,36,67,83,145,226,129,119,180,145,95,123,152,null],
+  },
+  act2025: { named: null, hurr: null, major: null, ace: null },
+  adminPw: 'hurricanetrack2025',
+};
+
+const YEARS = [2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025];
+const AVG = { named:14, hurr:7, major:3, ace:123 };
+const SOURCE_ORDER = ['noaa','ukmet','csu_apr','csu_jun','ecmwf'];
+
+let DB = loadDB();
+let mode = 'single';
+let selectedSrc = 'noaa';
+let compareSrcs = ['noaa'];
+let chartView = 'storms';
+let charts = {};
+let adminUnlocked = false;
+let adminActiveSrc = 'noaa';
+
+// ===================== PERSISTENCE =====================
+function loadDB() {
+  try {
+    const saved = localStorage.getItem('ht_db');
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+function saveDB() {
+  try { localStorage.setItem('ht_db', JSON.stringify(DB)); } catch(e) {}
+}
+function resetDB() {
+  DB = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  saveDB();
+}
+
+// ===================== NAVIGATION =====================
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const links = document.querySelectorAll('.nav-link');
+  const map = {dashboard:0, skill:1, about:2, admin:3};
+  if (map[id] !== undefined && links[map[id]]) links[map[id]].classList.add('active');
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'skill') renderSkill();
+  if (id === 'admin') renderAdmin();
+}
+
+// ===================== MODE & VIEW =====================
+function setMode(m) {
+  mode = m;
+  ['single','compare'].forEach(x => document.getElementById('modeBtn-'+x).classList.toggle('active', x===m));
+  document.getElementById('compareHint').style.display = m==='compare' ? '' : 'none';
+  if (m === 'single') { compareSrcs = [selectedSrc]; }
+  renderSourceStrip();
+  renderCharts();
+}
+
+function setChartView(v) {
+  chartView = v;
+  ['storms','ace','error'].forEach(x => {
+    document.getElementById('ctab-'+x).classList.toggle('active', x===v);
+    document.getElementById('view-'+x).style.display = x===v ? '' : 'none';
+  });
+  renderCharts();
+}
+
+// ===================== HERO PROGRESS =====================
+function renderHero() {
+  // Build average prediction across selected/compare sources for 2025
+  const src2025 = mode==='single' ? [selectedSrc] : compareSrcs;
+  const avg2025 = (key) => {
+    const vals = src2025.map(s => DB.sources[s][key+'_pred'][14]).filter(v=>v!==null);
+    return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : '—';
+  };
+  const p_n = avg2025('named'), p_h = avg2025('hurr'), p_m = avg2025('major'), p_a = avg2025('ace');
+  const a_n = DB.act2025.named ?? 0;
+  const a_h = DB.act2025.hurr ?? 0;
+  const a_m = DB.act2025.major ?? 0;
+  const a_a = DB.act2025.ace ?? 0;
+
+  document.getElementById('heroMeta').textContent =
+    `Source: ${src2025.map(s=>DB.sources[s].label+' '+DB.sources[s].sublabel).join(' · ')} — averages from 1991–2020`;
+
+  const pct = (a,p) => typeof p==='number' ? Math.min(100, Math.round(a/p*100)) : 0;
+  document.getElementById('progressGrid').innerHTML = `
+    ${progCard('Named Storms','var(--named)', a_n, p_n, pct(a_n,p_n))}
+    ${progCard('Hurricanes','var(--hurr)', a_h, p_h, pct(a_h,p_h))}
+    ${progCard('Major Hurr.','var(--major)', a_m, p_m, pct(a_m,p_m))}
+    ${progCard('ACE','var(--ace-color)', a_a, p_a, pct(a_a,p_a))}
+  `;
+}
+
+function progCard(label, color, actual, pred, pct) {
+  return `<div class="prog-card">
+    <div class="prog-header">
+      <div class="prog-label">${label}</div>
+      <div class="prog-vals">Pred: <strong>${pred}</strong></div>
+    </div>
+    <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+    <div class="prog-nums">
+      <div class="prog-actual" style="color:${color}">${actual ?? '—'}</div>
+      <div class="prog-pred">/ ${pred} <span style="color:var(--faint);">(${pct}%)</span></div>
+    </div>
+  </div>`;
+}
+
+// ===================== SOURCE STRIP =====================
+function renderSourceStrip() {
+  const strip = document.getElementById('sourceStrip');
+  strip.innerHTML = SOURCE_ORDER.map(sid => {
+    const s = DB.sources[sid];
+    const p2025 = (k) => s[k+'_pred'][14] ?? '—';
+    const isSel = mode==='single' ? sid===selectedSrc : compareSrcs.includes(sid);
+    const cls = mode==='single' ? (isSel?'selected':'') : (isSel?'compare-on':'');
+    return `<div class="src-card ${cls}" onclick="selectSource('${sid}')">
+      <div class="src-card-check">✓</div>
+      <div class="src-card-name">${s.label}</div>
+      <div class="src-card-when">${s.sublabel}</div>
+      <div class="src-card-nums">
+        <span class="src-num named">${p2025('named')}N</span>
+        <span class="src-num hurr">${p2025('hurr')}H</span>
+        <span class="src-num major">${p2025('major')}M</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectSource(sid) {
+  if (mode === 'single') {
+    selectedSrc = sid;
+    compareSrcs = [sid];
+  } else {
+    if (compareSrcs.includes(sid)) {
+      if (compareSrcs.length > 1) compareSrcs = compareSrcs.filter(s=>s!==sid);
+    } else {
+      if (compareSrcs.length < 3) compareSrcs.push(sid);
+      else { showToast('Max 3 sources in compare mode'); return; }
+    }
+  }
+  renderSourceStrip();
+  renderHero();
+  renderCharts();
+}
+
+// ===================== CHARTS =====================
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function renderCharts() {
+  renderHero();
+  if (chartView === 'storms') { renderStormCharts(); }
+  else if (chartView === 'ace') { renderAceCharts(); }
+  else if (chartView === 'error') { renderErrorCharts(); }
+}
+
+const GRID_COLOR = 'rgba(255,255,255,0.05)';
+const TICK_COLOR = 'rgba(237,234,227,0.35)';
+const baseOpts = {
+  responsive: true, maintainAspectRatio: false,
+  animation: { duration: 350 },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: '#1a1c1f',
+      borderColor: 'rgba(255,255,255,0.12)', borderWidth: 1,
+      titleColor: '#e8a430', bodyColor: 'rgba(237,234,227,0.7)', padding: 10,
+    }
+  },
+  scales: {
+    x: { ticks:{color:TICK_COLOR,font:{size:11,family:"'Barlow Condensed',sans-serif"},maxRotation:45,autoSkip:false}, grid:{color:GRID_COLOR} },
+    y: { ticks:{color:TICK_COLOR,font:{size:11}}, grid:{color:GRID_COLOR} }
+  }
+};
+
+function srcList() { return mode==='single' ? [selectedSrc] : compareSrcs; }
+
+function stormDatasets(type) {
+  // type: 'named','hurr','major'
+  const colors = { named:'#4a9eed', hurr:'#e8a430', major:'#d44b3a' };
+  const dashes = { named:[], hurr:[5,3], major:[2,4] };
+  const srcs = srcList();
+  const datasets = [];
+
+  // Actual (shared)
+  datasets.push({
+    label: type==='named'?'Actual Named':(type==='hurr'?'Actual Hurr':'Actual Major'),
+    data: DB.actuals[type],
+    borderColor: 'rgba(255,255,255,0)',
+    backgroundColor: colors[type]+'88',
+    pointRadius: 6, pointStyle:'circle', showLine:false, spanGaps:false,
+    pointHoverRadius: 8,
+  });
+
+  // 2025 actual overlay
+  const a2025 = DB.act2025[type];
+  if (a2025 !== null) {
+    const d2025 = YEARS.map((_,i)=>i===14?a2025:null);
+    datasets.push({ label:'2025 Actual', data:d2025, borderColor:'rgba(255,255,255,0)', backgroundColor:'#ffffff', pointRadius:8, showLine:false, spanGaps:false, pointStyle:'rectRot' });
+  }
+
+  srcs.forEach((sid,i) => {
+    const s = DB.sources[sid];
+    const palette = [s.color, '#ffffff', '#ffaa00'];
+    const c = palette[i] || s.color;
+    datasets.push({
+      label: `${s.label} ${s.sublabel} pred.`,
+      data: s[type+'_pred'],
+      borderColor: c,
+      backgroundColor: c+'18',
+      borderWidth: 2,
+      pointRadius: 3, pointHoverRadius: 5,
+      tension: 0.3, spanGaps: true,
+      borderDash: dashes[type],
+    });
+  });
+
+  return datasets;
+}
+
+function renderStormCharts() {
+  destroyChart('storms'); destroyChart('avg');
+
+  // avg line plugin
+  const avgPlugin = {
+    id:'avgLines',
+    beforeDraw(chart){
+      const {ctx,chartArea,scales:{y}} = chart;
+      if(!chartArea) return;
+      [[AVG.named,'#4a9eed'],[AVG.hurr,'#e8a430'],[AVG.major,'#d44b3a']].forEach(([v,c])=>{
+        const yy=y.getPixelForValue(v);
+        ctx.save(); ctx.strokeStyle=c+'44'; ctx.lineWidth=1; ctx.setLineDash([6,4]);
+        ctx.beginPath(); ctx.moveTo(chartArea.left,yy); ctx.lineTo(chartArea.right,yy); ctx.stroke();
+        ctx.restore();
+      });
+    }
+  };
+
+  // Multi-type combined chart
+  const allDs = [...stormDatasets('named'), ...stormDatasets('hurr'), ...stormDatasets('major')];
+  // Deduplicate actuals (already added for named, remove hurr/major actual)
+  // Keep only named-actual + source lines for hurr & major
+  const cleanDs = allDs.filter((d,i)=> {
+    if (d.label.startsWith('Actual Hurr') || d.label.startsWith('Actual Major') || d.label.startsWith('2025 Actual') && i!==1) return false;
+    return true;
+  });
+
+  const srcs = srcList();
+  document.getElementById('stormChartTitle').textContent = mode==='compare' ? 'Outlooks Comparison — Named Storms' : 'Outlooks vs. Actuals';
+
+  // Legend
+  const legEl = document.getElementById('stormLegend');
+  legEl.innerHTML = `
+    <div class="leg"><div class="leg-dot" style="background:#4a9eed88"></div> Actual named</div>
+    ${srcs.map(s=>`<div class="leg"><div class="leg-line" style="background:${DB.sources[s].color}"></div> ${DB.sources[s].label} pred.</div>`).join('')}
+    <div class="leg"><div class="leg-dash" style="border-color:var(--named)"></div> Named avg</div>
+  `;
+
+  charts['storms'] = new Chart(document.getElementById('chartStorms').getContext('2d'), {
+    type:'line',
+    data:{ labels:YEARS, datasets:[
+      { label:'Actual Named', data:DB.actuals.named, borderColor:'rgba(255,255,255,0)', backgroundColor:'#4a9eed88', pointRadius:6, showLine:false, spanGaps:false, pointHoverRadius:8 },
+      ...srcs.map((sid,i)=>{
+        const s=DB.sources[sid]; const palette=['#4a9eed','#a78bfa','#4ade80'];
+        return { label:`${s.label} Named pred.`, data:s.named_pred, borderColor:palette[i]||s.color, borderWidth:2, pointRadius:3, tension:0.3, spanGaps:true, backgroundColor:'transparent', pointHoverRadius:5 };
+      })
+    ]},
+    options:{...baseOpts, scales:{...baseOpts.scales, y:{...baseOpts.scales.y,min:0,max:35,title:{display:true,text:'Count',color:TICK_COLOR,font:{size:11}}}}},
+    plugins:[avgPlugin]
+  });
+
+  // Avg reference chart
+  charts['avg'] = new Chart(document.getElementById('chartAvg').getContext('2d'), {
+    type:'bar',
+    data:{ labels:YEARS.slice(0,-1), datasets:[
+      { label:'Named actual', data:DB.actuals.named.slice(0,-1), backgroundColor:'rgba(74,158,237,0.45)', borderColor:'rgba(74,158,237,0.8)', borderWidth:1, order:2 },
+      { label:'Hurr actual', data:DB.actuals.hurr.slice(0,-1), backgroundColor:'rgba(232,164,48,0.5)', borderColor:'rgba(232,164,48,0.85)', borderWidth:1, order:2 },
+      { label:'Major actual', data:DB.actuals.major.slice(0,-1), backgroundColor:'rgba(212,75,58,0.5)', borderColor:'rgba(212,75,58,0.85)', borderWidth:1, order:2 },
+    ]},
+    options:{...baseOpts,
+      scales:{
+        x:{...baseOpts.scales.x,stacked:false},
+        y:{...baseOpts.scales.y,min:0,max:35,stacked:false,title:{display:true,text:'Count',color:TICK_COLOR,font:{size:11}}}
+      },
+      plugins:{...baseOpts.plugins},
+    },
+    plugins:[{
+      id:'avgRefLines',
+      beforeDraw(chart){
+        const {ctx,chartArea,scales:{y}}=chart;
+        if(!chartArea)return;
+        [[AVG.named,'#4a9eed'],[AVG.hurr,'#e8a430'],[AVG.major,'#d44b3a']].forEach(([v,c])=>{
+          const yy=y.getPixelForValue(v);
+          ctx.save(); ctx.strokeStyle=c; ctx.lineWidth=1.5; ctx.setLineDash([6,3]);
+          ctx.beginPath(); ctx.moveTo(chartArea.left,yy); ctx.lineTo(chartArea.right,yy); ctx.stroke();
+          ctx.restore();
+        });
+      }
+    }]
+  });
+}
+
+function renderAceCharts() {
+  destroyChart('ace'); destroyChart('aceBands');
+  const srcs = srcList();
+  document.getElementById('aceChartTitle').textContent = mode==='compare' ? 'ACE Comparison' : 'ACE Outlooks vs. Actuals';
+
+  const aceLeg = document.getElementById('aceLegend');
+  aceLeg.innerHTML = `
+    <div class="leg"><div class="leg-line" style="background:#fff"></div> Actual ACE</div>
+    ${srcs.map((s,i)=>{const palette=['#a78bfa','#4a9eed','#4ade80']; return `<div class="leg"><div class="leg-dot" style="background:${palette[i]};opacity:0.7"></div> ${DB.sources[s].label} pred.</div>`}).join('')}
+    <div class="leg"><div class="leg-dash" style="border-color:var(--avg-color)"></div> Avg (123)</div>
+  `;
+
+  const palette = ['#a78bfa','#4a9eed','#4ade80'];
+  charts['ace'] = new Chart(document.getElementById('chartAce').getContext('2d'), {
+    type:'line',
+    data:{ labels:YEARS, datasets:[
+      { label:'Actual ACE', data:DB.actuals.ace, borderColor:'#ffffff', backgroundColor:'rgba(255,255,255,0.06)', borderWidth:2.5, pointRadius:5, tension:0.2, spanGaps:false, pointHoverRadius:7 },
+      ...srcs.map((sid,i)=>{
+        const s=DB.sources[sid];
+        return { label:`${s.label} ACE pred.`, data:s.ace_pred, borderColor:'rgba(0,0,0,0)', backgroundColor:palette[i]+'88', pointRadius:7, pointStyle:'circle', showLine:false, spanGaps:true, pointHoverRadius:9 };
+      })
+    ]},
+    options:{...baseOpts, scales:{...baseOpts.scales, y:{...baseOpts.scales.y,min:0,max:280,title:{display:true,text:'ACE',color:TICK_COLOR,font:{size:11}}}}},
+    plugins:[{
+      id:'aceAvgLine',
+      beforeDraw(chart){
+        const {ctx,chartArea,scales:{y}}=chart;
+        if(!chartArea)return;
+        const yy=y.getPixelForValue(AVG.ace);
+        ctx.save(); ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.lineWidth=1; ctx.setLineDash([6,4]);
+        ctx.beginPath(); ctx.moveTo(chartArea.left,yy); ctx.lineTo(chartArea.right,yy); ctx.stroke();
+        ctx.restore();
+      }
+    }]
+  });
+
+  // Bands chart
+  charts['aceBands'] = new Chart(document.getElementById('chartAceBands').getContext('2d'), {
+    type:'bar',
+    data:{ labels:YEARS.slice(0,-1), datasets:[
+      { label:'Actual ACE', data:DB.actuals.ace.slice(0,-1),
+        backgroundColor: DB.actuals.ace.slice(0,-1).map(v=>v===null?'transparent':v>150?'rgba(212,75,58,0.65)':v<75?'rgba(74,158,237,0.55)':'rgba(255,255,255,0.25)'),
+        borderColor: DB.actuals.ace.slice(0,-1).map(v=>v===null?'transparent':v>150?'rgba(212,75,58,0.9)':v<75?'rgba(74,158,237,0.8)':'rgba(255,255,255,0.4)'),
+        borderWidth:1 }
+    ]},
+    options:{...baseOpts, scales:{...baseOpts.scales, y:{...baseOpts.scales.y,min:0,max:280,title:{display:true,text:'ACE',color:TICK_COLOR,font:{size:11}}}}},
+    plugins:[{
+      id:'aceBandsBg',
+      beforeDraw(chart){
+        const {ctx,chartArea,scales:{y}}=chart;
+        if(!chartArea)return;
+        const y150=y.getPixelForValue(150), y75=y.getPixelForValue(75);
+        ctx.save();
+        ctx.fillStyle='rgba(212,75,58,0.07)';
+        ctx.fillRect(chartArea.left,chartArea.top,chartArea.width,y150-chartArea.top);
+        ctx.fillStyle='rgba(255,255,255,0.03)';
+        ctx.fillRect(chartArea.left,y150,chartArea.width,y75-y150);
+        ctx.fillStyle='rgba(74,158,237,0.07)';
+        ctx.fillRect(chartArea.left,y75,chartArea.width,chartArea.bottom-y75);
+        // avg line
+        const yavg=y.getPixelForValue(AVG.ace);
+        ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.lineWidth=1; ctx.setLineDash([6,4]);
+        ctx.beginPath(); ctx.moveTo(chartArea.left,yavg); ctx.lineTo(chartArea.right,yavg); ctx.stroke();
+        ctx.restore();
+      }
+    }]
+  });
+}
+
+function renderErrorCharts() {
+  destroyChart('errN'); destroyChart('errHM');
+  const srcs = srcList();
+  document.getElementById('errChartTitle').textContent = mode==='compare' ? 'Error Comparison — Named Storms' : 'Forecast Error — Named Storms';
+  const errLeg = document.getElementById('errLegend');
+  errLeg.innerHTML = srcs.map((s,i)=>{const c=['#4a9eed','#a78bfa','#4ade80']; return `<div class="leg"><div class="leg-dot" style="background:${c[i]}"></div> ${DB.sources[s].label}</div>`}).join('') + '<div class="leg" style="font-size:10px;color:var(--faint)">Red = over-forecast · Blue = under-forecast</div>';
+
+  const yrs14 = YEARS.slice(0,-1);
+  const errDS = (key) => srcs.map((sid,i)=>{
+    const s = DB.sources[sid];
+    const palette=['#4a9eed','#a78bfa','#4ade80'];
+    const errs = yrs14.map((_,yi)=>s[key+'_pred'][yi]!==null&&DB.actuals[key][yi]!==null ? s[key+'_pred'][yi]-DB.actuals[key][yi] : null);
+    return { label:`${s.label} ${key} error`, data:errs,
+      backgroundColor: errs.map(v=>v===null?'transparent':v>0?`${palette[i]}88`:`${palette[i]}44`),
+      borderColor: errs.map(v=>v===null?'transparent':palette[i]), borderWidth:1 };
+  });
+
+  charts['errN'] = new Chart(document.getElementById('chartErrN').getContext('2d'),{
+    type:'bar', data:{labels:yrs14, datasets:errDS('named')},
+    options:{...baseOpts,scales:{...baseOpts.scales,y:{...baseOpts.scales.y,title:{display:true,text:'Pred − Actual',color:TICK_COLOR,font:{size:11}}}}},
+    plugins:[{id:'zeroLine',beforeDraw(c){const{ctx,chartArea,scales:{y}}=c;if(!chartArea)return;const yy=y.getPixelForValue(0);ctx.save();ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.lineWidth=1;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(chartArea.left,yy);ctx.lineTo(chartArea.right,yy);ctx.stroke();ctx.restore();}}]
+  });
+  charts['errHM'] = new Chart(document.getElementById('chartErrHM').getContext('2d'),{
+    type:'bar', data:{labels:yrs14, datasets:[...errDS('hurr'),...errDS('major')]},
+    options:{...baseOpts,scales:{...baseOpts.scales,y:{...baseOpts.scales.y,title:{display:true,text:'Pred − Actual',color:TICK_COLOR,font:{size:11}}}}},
+    plugins:[{id:'zeroLine',beforeDraw(c){const{ctx,chartArea,scales:{y}}=c;if(!chartArea)return;const yy=y.getPixelForValue(0);ctx.save();ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.lineWidth=1;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(chartArea.left,yy);ctx.lineTo(chartArea.right,yy);ctx.stroke();ctx.restore();}}]
+  });
+}
+
+// ===================== SKILL SCORES =====================
+function calcSkill(sid) {
+  const s = DB.sources[sid];
+  const results = {};
+  ['named','hurr','major','ace'].forEach(key => {
+    const pred = s[key+'_pred'];
+    const act = DB.actuals[key];
+    let sumAbsErr=0, sumErr=0, n=0;
+    let sumX2=0,sumY2=0,sumXY=0,meanX=0,meanY=0;
+    const pairs=[];
+    for(let i=0;i<pred.length-1;i++){
+      if(pred[i]!==null&&act[i]!==null){
+        sumAbsErr+=Math.abs(pred[i]-act[i]);
+        sumErr+=(pred[i]-act[i]);
+        pairs.push([pred[i],act[i]]);
+        n++;
+      }
+    }
+    const mae=n?Math.round(sumAbsErr/n*10)/10:null;
+    const bias=n?Math.round(sumErr/n*10)/10:null;
+    // correlation
+    let r=null;
+    if(pairs.length>2){
+      const mx=pairs.reduce((a,b)=>a+b[0],0)/pairs.length;
+      const my=pairs.reduce((a,b)=>a+b[1],0)/pairs.length;
+      const num=pairs.reduce((a,b)=>a+(b[0]-mx)*(b[1]-my),0);
+      const d1=Math.sqrt(pairs.reduce((a,b)=>a+(b[0]-mx)**2,0));
+      const d2=Math.sqrt(pairs.reduce((a,b)=>a+(b[1]-my)**2,0));
+      r=d1&&d2?Math.round(num/d1/d2*100)/100:null;
+    }
+    results[key]={mae,bias,r,n};
+  });
+  return results;
+}
+
+function renderSkill() {
+  const grid = document.getElementById('skillGrid');
+  const allSkills = SOURCE_ORDER.map(sid=>({sid,skill:calcSkill(sid)}));
+
+  // Rank by named MAE
+  const ranked = [...allSkills].filter(x=>x.skill.named.mae!==null).sort((a,b)=>a.skill.named.mae-b.skill.named.mae);
+
+  grid.innerHTML = SOURCE_ORDER.map((sid,i) => {
+    const s = DB.sources[sid];
+    const sk = allSkills.find(x=>x.sid===sid).skill;
+    const rank = ranked.findIndex(x=>x.sid===sid)+1;
+    const rankCls = rank===1?'rank-1':rank===2?'rank-2':'rank-3';
+    const maeBad = (v,t)=>v!==null&&v>t?'bad':'';
+    return `<div class="skill-card" style="border-top:3px solid ${s.color}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+        <div class="skill-card-name" style="color:${s.color}">${s.label}</div>
+        ${rank?`<span class="rank-badge ${rankCls}">#${rank}</span>`:''}
+      </div>
+      <div class="skill-card-period">${s.sublabel} · ${sk.named.n} seasons verified</div>
+      ${skillRow('Named MAE',sk.named.mae,'±',sk.named.mae!==null&&sk.named.mae<3?'good':sk.named.mae>5?'bad':'')}
+      ${skillRow('Named Bias',sk.named.bias,'',sk.named.bias!==null&&Math.abs(sk.named.bias)<1?'good':Math.abs(sk.named.bias??0)>3?'bad':'')}
+      ${skillRow('Named Corr.',sk.named.r,'r=',sk.named.r!==null&&sk.named.r>0.6?'good':sk.named.r!==null&&sk.named.r<0.3?'bad':'')}
+      ${skillRow('Hurr. MAE',sk.hurr.mae,'±','')}
+      ${skillRow('ACE MAE',sk.ace.mae,'±','')}
+    </div>`;
+  }).join('');
+
+  // Table
+  document.getElementById('skillTable').innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Source</th><th>Period</th>
+        <th>Named MAE</th><th>Named Bias</th><th>Named r</th>
+        <th>Hurr. MAE</th><th>Major MAE</th><th>ACE MAE</th>
+      </tr></thead>
+      <tbody>
+        ${SOURCE_ORDER.map(sid=>{
+          const s=DB.sources[sid]; const sk=allSkills.find(x=>x.sid===sid).skill;
+          const fmt=v=>v!==null?v:'—';
+          return `<tr>
+            <td style="color:${s.color};font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.06em;">${s.label} <span style="color:var(--muted);font-size:11px;">${s.sublabel}</span></td>
+            <td>2011–2024</td>
+            <td>${fmt(sk.named.mae)}</td><td>${fmt(sk.named.bias)}</td><td>${fmt(sk.named.r)}</td>
+            <td>${fmt(sk.hurr.mae)}</td><td>${fmt(sk.major.mae)}</td><td>${fmt(sk.ace.mae)}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+function skillRow(label, val, prefix, cls) {
+  return `<div class="skill-metric">
+    <span class="skill-metric-label">${label}</span>
+    <span class="skill-metric-val ${cls}">${val!==null?prefix+val:'—'}</span>
+  </div>`;
+}
+
+// ===================== ADMIN =====================
+function renderAdmin() {
+  // Source tabs
+  const tabsEl = document.getElementById('adminSrcTabs');
+  tabsEl.innerHTML = SOURCE_ORDER.map(sid=>`<button class="src-atab ${sid===adminActiveSrc?'active':''}" onclick="setAdminSrc('${sid}')">${DB.sources[sid].label} ${DB.sources[sid].sublabel}</button>`).join('');
+  renderAdminSrcFields();
+  renderHistFields();
+  // Load 2025 actuals
+  ['named','hurr','major','ace'].forEach(k=>{
+    const el=document.getElementById('act2025_'+k);
+    if(el) el.value=DB.act2025[k]??'';
+  });
+}
+
+function setAdminSrc(sid) {
+  adminActiveSrc = sid;
+  document.querySelectorAll('.src-atab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.src-atab').forEach(t=>{ if(t.textContent.trim()===`${DB.sources[sid].label} ${DB.sources[sid].sublabel}`.trim()) t.classList.add('active'); });
+  renderAdmin(); // re-render tabs + fields
+}
+
+function renderAdminSrcFields() {
+  const sid = adminActiveSrc;
+  const s = DB.sources[sid];
+  const fields = document.getElementById('adminSrcFields');
+  const keys = ['named_pred','hurr_pred','major_pred','ace_pred'];
+  const labels = ['Named Storm Pred','Hurricane Pred','Major Hurr Pred','ACE Pred'];
+  fields.innerHTML = `<div style="margin-bottom:10px;font-size:12px;color:var(--muted);">Editing: <strong style="color:${s.color}">${s.label} ${s.sublabel}</strong> — one value per year (2011–2025). Use blank for N/A.</div>`
+    + keys.map((k,ki)=>`
+      <div style="margin-bottom:14px;">
+        <div class="field-label" style="margin-bottom:6px;">${labels[ki]}</div>
+        <div style="display:grid;grid-template-columns:repeat(15,1fr);gap:4px;">
+          ${YEARS.map((yr,yi)=>`
+            <div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;color:var(--faint);text-align:center;margin-bottom:2px;">${yr}</div>
+              <input class="field-input" id="admin_${sid}_${k}_${yi}" type="number" min="0" value="${s[k][yi]??''}" placeholder="—" style="text-align:center;padding:5px 4px;font-size:12px;">
+            </div>`).join('')}
+        </div>
+      </div>`).join('');
+}
+
+function renderHistFields() {
+  const el = document.getElementById('histActualsFields');
+  const keys = ['named','hurr','major','ace'];
+  const labels = ['Named Actual','Hurr Actual','Major Actual','ACE Actual'];
+  const colors = [DB.sources.noaa.color,'#e8a430','#d44b3a','#a78bfa'];
+  el.innerHTML = keys.map((k,ki)=>`
+    <div style="margin-bottom:14px;">
+      <div class="field-label" style="margin-bottom:6px;color:${colors[ki]}">${labels[ki]}</div>
+      <div style="display:grid;grid-template-columns:repeat(14,1fr);gap:4px;">
+        ${YEARS.slice(0,-1).map((yr,yi)=>`
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;color:var(--faint);text-align:center;margin-bottom:2px;">${yr}</div>
+            <input class="field-input" id="hist_${k}_${yi}" type="number" min="0" value="${DB.actuals[k][yi]??''}" placeholder="—" style="text-align:center;padding:5px 4px;font-size:12px;">
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function tryUnlock() {
+  const pw = document.getElementById('adminPwInput').value;
+  if (pw === DB.adminPw) {
+    adminUnlocked = true;
+    document.getElementById('adminLock').style.display='none';
+    document.getElementById('adminForm').classList.add('unlocked');
+    renderAdmin();
+  } else {
+    document.getElementById('adminErr').textContent='Incorrect password.';
+    document.getElementById('adminPwInput').value='';
+  }
+}
+
+function lockAdmin() {
+  adminUnlocked=false;
+  document.getElementById('adminLock').style.display='';
+  document.getElementById('adminPwInput').value='';
+  document.getElementById('adminErr').textContent='';
+  document.getElementById('adminForm').classList.remove('unlocked');
+}
+
+function saveAdmin() {
+  // 2025 actuals
+  ['named','hurr','major','ace'].forEach(k=>{
+    const v=document.getElementById('act2025_'+k)?.value;
+    DB.act2025[k]=v===''||v===undefined?null:Number(v);
+  });
+  // Source preds
+  SOURCE_ORDER.forEach(sid=>{
+    ['named_pred','hurr_pred','major_pred','ace_pred'].forEach(key=>{
+      YEARS.forEach((_,yi)=>{
+        const el=document.getElementById(`admin_${sid}_${key}_${yi}`);
+        if(el){ DB.sources[sid][key][yi]=el.value===''?null:Number(el.value); }
+      });
+    });
+  });
+  // Historical actuals
+  ['named','hurr','major','ace'].forEach(k=>{
+    YEARS.slice(0,-1).forEach((_,yi)=>{
+      const el=document.getElementById(`hist_${k}_${yi}`);
+      if(el){ DB.actuals[k][yi]=el.value===''?null:Number(el.value); }
+    });
+  });
+  saveDB();
+  const st=document.getElementById('adminStatus');
+  st.classList.add('show');
+  setTimeout(()=>st.classList.remove('show'),2500);
+  showToast('Data saved — dashboard updated');
+}
+
+function resetAdmin() {
+  if(!confirm('Reset all data to defaults? This cannot be undone.')) return;
+  resetDB();
+  renderAdmin();
+  showToast('Reset to default data');
+}
+
+// ===================== DASHBOARD RENDER =====================
+function renderDashboard() {
+  renderSourceStrip();
+  renderHero();
+  renderCharts();
+}
+
+// ===================== TOAST =====================
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// ===================== INIT =====================
+renderDashboard();
+</script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HurricaneTrack — Season Outlooks Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ── NAVIGATION ── -->
+<nav id="nav">
+  <div class="nav-logo">🌀 HurricaneTrack <span class="logo-sub">Outlook Dashboard</span></div>
+  <div class="nav-links" id="navLinks">
+    <a class="nav-link active" href="index.html">Dashboard</a>
+    <a class="nav-link" href="season.html">Season</a>
+    <a class="nav-link" href="compare.html">Compare</a>
+    <a class="nav-link" href="admin.html">Admin</a>
+  </div>
+  <div class="nav-right">
+    <div class="season-pill" id="seasonPill">● 2026 Season Active</div>
+  </div>
+  <button class="nav-hamburger" onclick="toggleNav()" aria-label="Menu">☰</button>
+</nav>
+
+<!-- ── HERO ── -->
+<div class="page-hero" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+  <div>
+    <div class="page-hero-title"><span id="heroYear">2026</span> Atlantic Hurricane Season Outlooks</div>
+    <div class="page-hero-meta">Comparing agency predictions · Click a source label to see its full history</div>
+  </div>
+  <div class="year-picker">
+    <button class="year-btn" id="yearPrev" title="Previous year">‹</button>
+    <div class="year-display" id="yearDisplay">2026</div>
+    <button class="year-btn" id="yearNext" title="Next year">›</button>
+  </div>
+</div>
+
+<!-- ── MAIN CONTENT ── -->
+<div class="page-content">
+
+  <!-- Summary cards (actuals for selected year) -->
+  <div style="margin-bottom:20px">
+    <div class="section-title">Season Actuals</div>
+    <div class="summary-grid" id="summaryCards">
+      <!-- Populated by dashboard.js -->
+    </div>
+  </div>
+
+  <!-- Storm count chart -->
+  <div style="margin-bottom:16px">
+    <div class="chart-card">
+      <div class="chart-card-title">Storm Count Outlooks</div>
+      <div class="chart-card-sub">
+        Named storms · Hurricanes · Major hurricanes — dots = point estimate, bars = forecast range
+      </div>
+      <div class="legend-row">
+        <div class="leg"><div class="leg-dot" style="background:var(--named)"></div> Named storms</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--hurr)"></div> Hurricanes</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--major)"></div> Major hurricanes</div>
+        <div class="leg"><div class="leg-dash" style="border-color:var(--named)"></div> Climo avg</div>
+      </div>
+      <div class="chart-wrap" style="height:340px">
+        <canvas id="chartStorms" role="img" aria-label="Storm count outlooks vs actuals"></canvas>
+      </div>
+      <div class="source-label-row" id="stormLabels"></div>
+    </div>
+  </div>
+
+  <!-- ACE chart -->
+  <div>
+    <div class="chart-card">
+      <div class="chart-card-title">ACE Outlooks</div>
+      <div class="chart-card-sub">
+        Accumulated Cyclone Energy · Red shading = above normal (>150) · Blue = below normal (<75)
+      </div>
+      <div class="legend-row">
+        <div class="leg"><div class="leg-dot" style="background:var(--ace)"></div> ACE prediction</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--ace);opacity:0.5;border:1px solid var(--ace);background:transparent"></div> ACE west of 60°W</div>
+        <div class="leg"><div class="leg-dash" style="border-color:var(--ace)"></div> Avg ACE (123)</div>
+      </div>
+      <div class="chart-wrap" style="height:340px">
+        <canvas id="chartAce" role="img" aria-label="ACE outlooks"></canvas>
+      </div>
+      <div class="source-label-row" id="aceLabels"></div>
+    </div>
+  </div>
+
+
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<script src="js/data.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/dashboard.js"></script>
+<script>
+  function toggleNav() {
+    document.getElementById('navLinks').classList.toggle('open');
+  }
+
+  function showToast(msg, duration = 2500) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), duration);
+  }
+</script>
+</body>
+</html>

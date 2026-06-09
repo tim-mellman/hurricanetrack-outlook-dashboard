@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HurricaneTrack — Season</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ── NAVIGATION ── -->
+<nav id="nav">
+  <div class="nav-logo">🌀 HurricaneTrack <span class="logo-sub">Outlook Dashboard</span></div>
+  <div class="nav-links" id="navLinks">
+    <a class="nav-link" href="index.html">Dashboard</a>
+    <a class="nav-link active" href="season.html">Season</a>
+    <a class="nav-link" href="compare.html">Compare</a>
+    <a class="nav-link" href="admin.html">Admin</a>
+  </div>
+  <div class="nav-right"></div>
+  <button class="nav-hamburger" onclick="toggleNav()" aria-label="Menu">☰</button>
+</nav>
+
+<!-- ── HERO ── -->
+<div class="page-hero" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+  <div>
+    <div class="page-hero-title"><span id="heroYear">2026</span> Atlantic Hurricane Season</div>
+    <div class="page-hero-meta">Storm timeline · Cumulative ACE · Season statistics</div>
+  </div>
+  <div class="year-picker">
+    <button class="year-btn" id="yearPrev" title="Previous year">‹</button>
+    <div class="year-display" id="yearDisplay">2026</div>
+    <button class="year-btn" id="yearNext" title="Next year">›</button>
+  </div>
+</div>
+
+<!-- ── CONTENT ── -->
+<div class="page-content">
+
+  <!-- Summary stat cards -->
+  <div style="margin-bottom:20px">
+    <div class="section-title">Season Statistics</div>
+    <div class="summary-grid" id="summaryCards">
+      <!-- Populated by season.js -->
+    </div>
+  </div>
+
+  <!-- Storm timeline -->
+  <div style="margin-bottom:16px">
+    <div class="chart-card">
+      <div class="chart-card-title">Storm Timeline</div>
+      <div class="chart-card-sub">One bar per storm, colored by peak intensity category · spans active life of storm</div>
+      <div class="legend-row">
+        <div class="leg"><div class="leg-dot" style="background:var(--cat-ts)"></div> Tropical Storm</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--cat-1)"></div> Cat 1</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--cat-2)"></div> Cat 2</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--cat-3)"></div> Cat 3</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--cat-4)"></div> Cat 4</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--cat-5)"></div> Cat 5</div>
+      </div>
+      <div class="chart-wrap" style="height:320px">
+        <canvas id="timelineChart" role="img" aria-label="Storm timeline Gantt chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACE curves (two charts side by side) -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="chart-card">
+      <div class="chart-card-title">Cumulative ACE</div>
+      <div class="chart-card-sub">Running season ACE vs. historical average ± 1 std dev</div>
+      <div class="legend-row">
+        <div class="leg"><div class="leg-dot" style="background:var(--accent)"></div> This season</div>
+        <div class="leg"><div class="leg-dot" style="background:rgba(255,255,255,0.4)"></div> Historical avg</div>
+      </div>
+      <div class="chart-wrap" style="height:280px">
+        <canvas id="aceCurveChart" role="img" aria-label="Cumulative ACE curve"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-card-title">ACE Density</div>
+      <div class="chart-card-sub">Smoothed ACE generation rate through the season vs. historical average</div>
+      <div class="legend-row">
+        <div class="leg"><div class="leg-dot" style="background:var(--accent)"></div> This season</div>
+        <div class="leg"><div class="leg-dot" style="background:rgba(255,255,255,0.4)"></div> Historical avg</div>
+      </div>
+      <div class="chart-wrap" style="height:280px">
+        <canvas id="aceDensityChart" role="img" aria-label="ACE density curve"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/data.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/season.js"></script>
+<script>
+  function toggleNav() {
+    document.getElementById('navLinks').classList.toggle('open');
+  }
+
+  // Year picker — navigates via URL param so the page reloads with the new year
+  const MIN_YEAR = 2004;
+  const MAX_YEAR = new Date().getFullYear();
+  const params   = new URLSearchParams(window.location.search);
+  const curYear  = parseInt(params.get('year')) || MAX_YEAR;
+
+  document.getElementById('yearDisplay').textContent = curYear;
+  document.getElementById('heroYear').textContent    = curYear;
+  document.getElementById('yearPrev').disabled = curYear <= MIN_YEAR;
+  document.getElementById('yearNext').disabled = curYear >= MAX_YEAR;
+
+  document.getElementById('yearPrev').addEventListener('click', () => {
+    if (curYear <= MIN_YEAR) return;
+    params.set('year', curYear - 1);
+    window.location.search = params.toString();
+  });
+  document.getElementById('yearNext').addEventListener('click', () => {
+    if (curYear >= MAX_YEAR) return;
+    params.set('year', curYear + 1);
+    window.location.search = params.toString();
+  });
+</script>
+</body>
+</html>

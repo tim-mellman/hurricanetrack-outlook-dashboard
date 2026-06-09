@@ -1,0 +1,101 @@
+[
+  {
+    "id": "csu_apr",
+    "label": "CSU",
+    "sublabel": "April",
+    "color": "#4ade80",
+    "start_year": 2008,
+    "has_range": false,
+    "has_major": true,
+    "has_ace_w60": true,
+    "ace_w60_start_year": 2023
+  },
+  {
+    "id": "ecmwf_may",
+    "label": "ECMWF",
+    "sublabel": "May",
+    "color": "#4e8cca",
+    "start_year": 2017,
+    "has_range": true,
+    "has_major": false,
+    "has_ace_w60": false,
+    "ace_w60_start_year": null
+  },
+  {
+    "id": "ukmet_may",
+    "label": "UK Met",
+    "sublabel": "May",
+    "color": "#a78bfa",
+    "start_year": 2011,
+    "has_range": false,
+    "has_major": true,
+    "has_ace_w60": false,
+    "ace_w60_start_year": null
+  },
+  {
+    "id": "noaa_may",
+    "label": "NOAA",
+    "sublabel": "May",
+    "color": "#fbb03b",
+    "start_year": 2008,
+    "has_range": true,
+    "has_major": true,
+    "has_ace_w60": false,
+    "ace_w60_start_year": null
+  },
+  {
+    "id": "csu_jun",
+    "label": "CSU",
+    "sublabel": "June",
+    "color": "#34d399",
+    "start_year": 2008,
+    "has_range": false,
+    "has_major": true,
+    "has_ace_w60": true,
+    "ace_w60_start_year": 2023
+  },
+  {
+    "id": "csu_jul",
+    "label": "CSU",
+    "sublabel": "July",
+    "color": "#2dd4bf",
+    "start_year": 2015,
+    "has_range": false,
+    "has_major": true,
+    "has_ace_w60": true,
+    "ace_w60_start_year": 2023
+  },
+  {
+    "id": "ukmet_aug",
+    "label": "UK Met",
+    "sublabel": "August",
+    "color": "#c084fc",
+    "start_year": 2011,
+    "has_range": false,
+    "has_major": true,
+    "has_ace_w60": false,
+    "ace_w60_start_year": null
+  },
+  {
+    "id": "csu_aug",
+    "label": "CSU",
+    "sublabel": "August",
+    "color": "#86efac",
+    "start_year": 2008,
+    "has_range": false,
+    "has_major": true,
+    "has_ace_w60": true,
+    "ace_w60_start_year": 2023
+  },
+  {
+    "id": "noaa_aug",
+    "label": "NOAA",
+    "sublabel": "August",
+    "color": "#fcd34d",
+    "start_year": 2008,
+    "has_range": true,
+    "has_major": true,
+    "has_ace_w60": false,
+    "ace_w60_start_year": null
+  }
+]

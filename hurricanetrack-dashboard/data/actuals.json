@@ -1,0 +1,21 @@
+[
+  { "year": 2008, "named": 16, "hurr": 8,  "major": 5, "ace": 145.0, "ace_w60": null },
+  { "year": 2009, "named": 9,  "hurr": 3,  "major": 2, "ace": 53.8,  "ace_w60": null },
+  { "year": 2010, "named": 19, "hurr": 12, "major": 5, "ace": 165.3, "ace_w60": null },
+  { "year": 2011, "named": 19, "hurr": 7,  "major": 4, "ace": 126.0, "ace_w60": null },
+  { "year": 2012, "named": 19, "hurr": 10, "major": 1, "ace": 133.0, "ace_w60": null },
+  { "year": 2013, "named": 14, "hurr": 2,  "major": 0, "ace": 36.0,  "ace_w60": null },
+  { "year": 2014, "named": 8,  "hurr": 6,  "major": 2, "ace": 67.0,  "ace_w60": null },
+  { "year": 2015, "named": 11, "hurr": 4,  "major": 2, "ace": 62.7,  "ace_w60": null },
+  { "year": 2016, "named": 15, "hurr": 7,  "major": 6, "ace": 145.0, "ace_w60": null },
+  { "year": 2017, "named": 17, "hurr": 10, "major": 4, "ace": 226.0, "ace_w60": null },
+  { "year": 2018, "named": 15, "hurr": 8,  "major": 2, "ace": 129.0, "ace_w60": null },
+  { "year": 2019, "named": 18, "hurr": 6,  "major": 3, "ace": 132.2, "ace_w60": null },
+  { "year": 2020, "named": 30, "hurr": 13, "major": 7, "ace": 180.0, "ace_w60": null },
+  { "year": 2021, "named": 21, "hurr": 7,  "major": 4, "ace": 145.0, "ace_w60": null },
+  { "year": 2022, "named": 14, "hurr": 7,  "major": 3, "ace": 94.4,  "ace_w60": null },
+  { "year": 2023, "named": 20, "hurr": 7,  "major": 3, "ace": 145.6, "ace_w60": null },
+  { "year": 2024, "named": 18, "hurr": 11, "major": 5, "ace": 162.0, "ace_w60": 100  },
+  { "year": 2025, "named": 13, "hurr": 5,  "major": 4, "ace": 133.0, "ace_w60": 100  },
+  { "year": 2026, "named": null, "hurr": null, "major": null, "ace": null, "ace_w60": null }
+]
