@@ -51,9 +51,12 @@
   <!-- Storm count chart -->
   <div style="margin-bottom:16px">
     <div class="chart-card">
-      <div class="chart-card-title">Storm Count Outlooks</div>
-      <div class="chart-card-sub">
-        Named storms · Hurricanes · Major hurricanes — dots = point estimate, bars = forecast range
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-card-title">Storm Count Outlooks</div>
+          <div class="chart-card-sub">Named storms · Hurricanes · Major hurricanes — dots = point estimate, bars = forecast range</div>
+        </div>
+        <button class="chart-dl-btn" onclick="downloadChart('chartStorms', `storm-outlooks-${selectedYear}`)">⬇ Save</button>
       </div>
       <div class="legend-row">
         <div class="leg"><div class="leg-dot" style="background:var(--named)"></div> Named storms</div>
@@ -71,9 +74,12 @@
   <!-- ACE chart -->
   <div>
     <div class="chart-card">
-      <div class="chart-card-title">ACE Outlooks</div>
-      <div class="chart-card-sub">
-        Accumulated Cyclone Energy · Red shading = above normal (>150) · Blue = below normal (<75)
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-card-title">ACE Outlooks</div>
+          <div class="chart-card-sub">Accumulated Cyclone Energy · Red shading = above normal (>150) · Blue = below normal (&lt;75)</div>
+        </div>
+        <button class="chart-dl-btn" onclick="downloadChart('chartAce', `ace-outlooks-${selectedYear}`)">⬇ Save</button>
       </div>
       <div class="legend-row">
         <div class="leg"><div class="leg-dot" style="background:var(--ace)"></div> ACE prediction</div>

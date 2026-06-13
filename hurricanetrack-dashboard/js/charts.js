@@ -247,32 +247,24 @@ function makeOutlookChart(canvas, { items, mode }) {
     },
 
     afterDatasetsDraw(chart) {
+      // Each metric's range bar is drawn at the column's x center (same as its dot),
+      // so bars and dots are vertically aligned per metric. The three metrics occupy
+      // different y-ranges so they don't overlap.
       const { ctx, scales: { x: xs, y: ys } } = chart;
       const colPx = items.length > 1 ? Math.abs(xs.getPixelForValue(1) - xs.getPixelForValue(0)) : 80;
-      const gap   = 3;
+      const barW  = Math.max(10, Math.round(colPx * 0.35));
 
       items.forEach((item, i) => {
         if (item.isActual || !item.has_range) return;
 
         const xCenter = Math.round(xs.getPixelForValue(i));
+        const x       = xCenter - Math.floor(barW / 2);  // integer left edge
 
-        // Only render bars for metrics that have a valid range; recenter the group
-        const barsToRender = METRICS.filter(({ key }) => {
-          const lo = item[key + '_lo'], hi = item[key + '_hi'];
-          return lo != null && hi != null && lo !== hi;
-        });
-        if (!barsToRender.length) return;
+        METRICS.forEach(({ key, color }) => {
+          const lo = item[key + '_lo'];
+          const hi = item[key + '_hi'];
+          if (lo == null || hi == null || lo === hi) return;
 
-        const nBars   = barsToRender.length;
-        const barW    = Math.max(8, Math.floor((colPx * 0.55 - gap * (nBars - 1)) / nBars));
-        const groupW  = barW * nBars + gap * (nBars - 1);
-        // groupLeft is an integer so every bar lands on an exact pixel boundary
-        const groupLeft = Math.round(xCenter - groupW / 2);
-
-        barsToRender.forEach(({ key, color }, bi) => {
-          const lo  = item[key + '_lo'];
-          const hi  = item[key + '_hi'];
-          const x   = groupLeft + bi * (barW + gap);   // integer — no fractional shift
           const pLo = Math.round(ys.getPixelForValue(lo));
           const pHi = Math.round(ys.getPixelForValue(hi));
 
@@ -281,8 +273,8 @@ function makeOutlookChart(canvas, { items, mode }) {
           ctx.globalAlpha = 0.45;
           ctx.fillRect(x, pHi, barW, pLo - pHi);
           ctx.globalAlpha = 0.9;
-          ctx.fillRect(x, pHi, barW, 3);
-          ctx.fillRect(x, pLo - 3, barW, 3);
+          ctx.fillRect(x, pHi, barW, 3);      // hi cap
+          ctx.fillRect(x, pLo - 3, barW, 3);  // lo cap
           ctx.restore();
         });
       });
@@ -323,6 +315,19 @@ function makeOutlookChart(canvas, { items, mode }) {
         ctx.setLineDash([]);
         ctx.restore();
       }
+
+      // Short colored tick-mark line below each column — gives color identity
+      // without duplicating the text already shown in the chip row below.
+      const colPxM  = items.length > 1 ? Math.abs(xs.getPixelForValue(1) - xs.getPixelForValue(0)) : 80;
+      const markerW = Math.max(8, Math.round(colPxM * 0.55));
+      items.forEach((item, i) => {
+        const xc = Math.round(xs.getPixelForValue(i));
+        ctx.save();
+        ctx.fillStyle   = item.isActual ? 'rgba(237,234,227,0.4)' : item.color;
+        ctx.globalAlpha = 0.8;
+        ctx.fillRect(xc - Math.floor(markerW / 2), ca.bottom + 5, markerW, 3);
+        ctx.restore();
+      });
     },
   };
 
@@ -342,6 +347,8 @@ function makeOutlookChart(canvas, { items, mode }) {
       responsive:          true,
       maintainAspectRatio: false,
       animation:           { duration: 200 },
+      interaction:         { mode: 'nearest', intersect: false },
+      layout:              { padding: { bottom: 12 } },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -374,15 +381,8 @@ function makeOutlookChart(canvas, { items, mode }) {
           max:   items.length - 0.5,
           grid:  { color: GRID_COLOR },
           ticks: {
-            color:       TICK_COLOR,
-            font:        { size: 10, family: 'Montserrat' },
-            stepSize:    1,
-            maxRotation: 0,
-            callback(val) {
-              if (val !== Math.round(val)) return null;
-              const item = items[val];
-              return item ? [item.label, item.sublabel] : null;
-            },
+            display:  false, // drawn manually in afterDraw for reliable per-column colors
+            stepSize: 1,
           },
         },
         y: {

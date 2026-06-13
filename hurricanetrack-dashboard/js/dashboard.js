@@ -8,6 +8,7 @@
 let selectedYear = new Date().getFullYear();
 let chartStorms  = null;
 let chartAce     = null;
+let _items       = [];   // kept for downloadChart access
 
 document.addEventListener('DOMContentLoaded', async () => {
   const db = await getData();
@@ -50,6 +51,7 @@ function render(db) {
   chartAce    = destroyChart(chartAce);
 
   const items = buildItems(db);
+  _items = items;
 
   // If no predictions exist for this year, leave canvases blank
   if (items.filter(it => !it.isActual).length === 0) return;
@@ -62,6 +64,99 @@ function render(db) {
 
   alignSourceChips(chartStorms, 'stormLabels', items);
   alignSourceChips(chartAce,    'aceLabels',   items);
+}
+
+// ── Chart download ────────────────────────────────────────────────────────────
+// Composites the chart canvas onto a dark background and saves as PNG so the
+// downloaded image matches the on-screen appearance.
+
+function downloadChart(canvasId, filename) {
+  const canvas = document.getElementById(canvasId);
+  const chart  = canvasId === 'chartStorms' ? chartStorms : chartAce;
+  if (!canvas || !chart || !_items.length) return;
+
+  const OUT_W   = 1000;
+  const CHART_H = 480;
+  const HDR_H   = 80;
+  const LBL_H   = 58;
+  const PAD     = 20;
+
+  // Resize chart to the exact output dimensions before capture so drawImage
+  // uses equal x/y scale factors — avoids distortion on narrow mobile canvases.
+  // Hide the wrapper to prevent a visible flash on screen.
+  const wrapper = canvas.closest('.chart-wrap');
+  if (wrapper) wrapper.style.visibility = 'hidden';
+  chart.resize(OUT_W, CHART_H);
+
+  // 2× output canvas so all text renders at retina quality.
+  // All drawing coordinates below are still in logical pixels — ctx.scale handles the rest.
+  const SCALE = 2;
+  const tmp = document.createElement('canvas');
+  tmp.width  = OUT_W  * SCALE;
+  tmp.height = (CHART_H + HDR_H + LBL_H) * SCALE;
+  const ctx  = tmp.getContext('2d');
+  ctx.scale(SCALE, SCALE);
+
+  // ── Background ─────────────────────────────────────────────────────
+  ctx.fillStyle = '#141618';
+  ctx.fillRect(0, 0, OUT_W, tmp.height);
+  ctx.fillStyle = '#0d0f11';
+  ctx.fillRect(0, HDR_H, OUT_W, CHART_H);
+
+  // ── Header ─────────────────────────────────────────────────────────
+  const chartLabel = canvasId === 'chartStorms' ? 'Storm Count Outlooks' : 'ACE Outlooks';
+  ctx.textBaseline = 'middle';
+
+  ctx.fillStyle = '#fbb03b';
+  ctx.font = '700 18px Montserrat, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('HURRICANETRACK', PAD, HDR_H * 0.3);
+
+  ctx.fillStyle = 'rgba(237,234,227,0.85)';
+  ctx.font = '600 14px Montserrat, sans-serif';
+  ctx.fillText(
+    `${selectedYear} ATLANTIC HURRICANE SEASON — ${chartLabel.toUpperCase()}`,
+    PAD, HDR_H * 0.72
+  );
+
+  ctx.fillStyle = 'rgba(237,234,227,0.3)';
+  ctx.font = '500 12px Montserrat, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('hurricanetrack.com', OUT_W - PAD, HDR_H * 0.72);
+
+  // ── Chart ──────────────────────────────────────────────────────────
+  // Canvas is now exactly OUT_W × CHART_H CSS px, so drawImage is distortion-free.
+  ctx.drawImage(canvas, 0, HDR_H, OUT_W, CHART_H);
+
+  // ── Column labels ──────────────────────────────────────────────────
+  // chart.chartArea coords are in OUT_W px space — use directly, no toOut needed.
+  const { left: aLeft, right: aRight } = chart.chartArea;
+  const colW  = (aRight - aLeft) / _items.length;
+  const lblY1 = CHART_H + HDR_H + LBL_H * 0.35;
+  const lblY2 = CHART_H + HDR_H + LBL_H * 0.72;
+
+  _items.forEach((item, i) => {
+    const px = Math.round(aLeft + (i + 0.5) * colW);
+    ctx.textAlign = 'center';
+
+    ctx.fillStyle = item.isActual ? 'rgba(237,234,227,0.6)' : item.color;
+    ctx.font = '700 13px Montserrat, sans-serif';
+    ctx.fillText(item.label.toUpperCase(), px, lblY1);
+
+    ctx.fillStyle = 'rgba(237,234,227,0.38)';
+    ctx.font = '500 11px Montserrat, sans-serif';
+    ctx.fillText(item.sublabel.toUpperCase(), px, lblY2);
+  });
+
+  // ── Restore chart to responsive size ───────────────────────────────
+  chart.resize();
+  if (wrapper) wrapper.style.visibility = '';
+
+  // ── Download ───────────────────────────────────────────────────────
+  const a    = document.createElement('a');
+  a.download = filename + '.png';
+  a.href     = tmp.toDataURL('image/png');
+  a.click();
 }
 
 // ── Source chip alignment ─────────────────────────────────────────────────────

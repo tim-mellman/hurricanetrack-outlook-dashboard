@@ -64,7 +64,7 @@
 
   /* Layout */
   --nav-height: 54px;
-  --content-max: 1400px;
+  --content-max: 1100px;
   --radius:  6px;
   --radius-lg: 10px;
 }
@@ -553,6 +553,46 @@ a:hover {
   50%       { opacity: 0.6; }
 }
 
+/* ─── CHART CARD HEADER (title + download button row) ───────────────────── */
+.chart-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.chart-card-header .chart-card-title {
+  margin-bottom: 2px;
+}
+
+.chart-card-header .chart-card-sub {
+  margin-bottom: 0;
+}
+
+.chart-dl-btn {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.4;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.chart-dl-btn:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
 /* ─── SOURCE LABEL CHIPS (below each outlook chart) ─────────────────────── */
 .source-label-row {
   display: flex;
@@ -639,17 +679,26 @@ a:hover {
     display: none;
   }
 
-  /* On mobile the chip row can't align to chart columns — wrap freely instead */
+  /* On mobile: horizontal scroll rail instead of column-aligned grid */
   .source-label-row {
     display: flex !important;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
     padding-left: 0 !important;
     padding-right: 0 !important;
-    gap: 5px;
+    gap: 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;       /* Firefox */
+    padding-bottom: 2px;
+  }
+
+  .source-label-row::-webkit-scrollbar {
+    display: none;               /* Chrome / Safari */
   }
 
   .source-chip {
+    flex-shrink: 0;              /* don't compress — allow rail to overflow */
     font-size: 0.6rem;
     padding: 4px 8px;
   }
